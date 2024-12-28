@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphique filtré</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+
+    <div style="width: 900px; height: 600px; margin: auto;">
+        <canvas id="stackedBarChart"></canvas>
+    </div>
+
+    <script>
+
+        const backgroundcolors = [
+    'rgb(45, 64, 40)',
+    'rgb(97, 115, 92)',
+    'rgb(164, 176, 156)',
+    'rgb(213, 219, 208)'
+];
+d3.csv("302.csv").then(function(data) {
+    console.log("Données brutes chargées :", data);
+
+    // Filtrer les données pour le projet "4sysleg"
+    const filteredData = data.filter(d =>
+        d["Nom du projet "] && d["Nom du projet "].trim().toLowerCase() === "cap red"
+    );
+    console.log("Données filtrées :", filteredData);
+
+    // Extraire les labels uniques (méthodes)
+    const labels = [...new Set(filteredData.map(d => d["Nom méthode "]?.trim()))];
+    
+    console.log("Labels (Nom méthode) :", labels);
+
+    // Catégories de satisfaction
+    const categories = ["Bon", "Mitigé", "Insatisfaisant", "Aucun avis émis"];
+
+    // Préparer les données pour chaque catégorie
+    const datasets = categories.map((category, index) => ({
+        label: avis,
+        data: labels.map(label => {
+            const filtered = filteredData.filter(d =>
+                d["Nom méthode "]?.trim() === label && d["Niveau de satisfaction de l'utilisation de la méthode"] === category
+            );
+            return filtered.length;
+        }),
+    }));
+    console.log("Datasets :", datasets);
+
+    // Dessiner le graphique
+    const ctx = document.getElementById("stackedBarChart").getContext("2d");
+    new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: datasets,
+        },
+        options: {
+            plugins: {
+                title: {
+                    display: true,
+                    text: "Nombre de satisfaction pour le projet '4sysleg'",
+                },
+                legend: {
+                    position: "top",
+                },
+            },
+            responsive: true,
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true },
+            },
+        },
+    });
+});
+    </script>
+
+</body>
+</html>
